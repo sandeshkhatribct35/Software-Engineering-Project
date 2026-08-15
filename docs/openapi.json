@@ -1,0 +1,1929 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FairShare API",
+    "description": "\nFairShare records shared group expenses and works out who owes whom.\n\n* Expenses are split **equally** or by **exact amounts**, never losing or\n  inventing money \u2014 shares always sum to the expense total.\n* Every member has a **net balance**; the balances of a group always sum to zero.\n* The **settlement plan** endpoint returns the smallest practical set of\n  payments that clears every debt in the group.\n\nAll monetary values are exchanged as strings with two decimal places so that no\nprecision is lost in JSON.\n",
+    "contact": {
+      "name": "Sandesh Khatri",
+      "url": "https://github.com/sandeshkhatribct35"
+    },
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Service health check",
+        "description": "Reports that the API process is running and returns its identity and version. Used by the container healthcheck and by the CI smoke test.",
+        "operationId": "read_health__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthRead"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups": {
+      "get": {
+        "tags": [
+          "groups"
+        ],
+        "summary": "List groups",
+        "description": "Returns every group, most recently created first.",
+        "operationId": "list_groups_api_v1_groups_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GroupRead"
+                  },
+                  "type": "array",
+                  "title": "Response List Groups Api V1 Groups Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "groups"
+        ],
+        "summary": "Create a group",
+        "description": "Creates an expense-sharing group. Members are added separately.",
+        "operationId": "create_group_api_v1_groups_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group_id}": {
+      "get": {
+        "tags": [
+          "groups"
+        ],
+        "summary": "Get a group",
+        "description": "Returns one group together with the members currently in it.",
+        "operationId": "get_group_api_v1_groups__group_id__get",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "groups"
+        ],
+        "summary": "Update a group",
+        "description": "Updates the name and/or description. Omitted fields are left unchanged.",
+        "operationId": "update_group_api_v1_groups__group_id__patch",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "groups"
+        ],
+        "summary": "Delete a group",
+        "description": "Deletes the group with all of its members, expenses and settlements.",
+        "operationId": "delete_group_api_v1_groups__group_id__delete",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group_id}/members": {
+      "post": {
+        "tags": [
+          "members"
+        ],
+        "summary": "Add a member",
+        "description": "Adds a person to the group. Names must be unique within the group, compared without regard to case; the same name may be used in other groups.",
+        "operationId": "add_member_api_v1_groups__group_id__members_post",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "members"
+        ],
+        "summary": "List members",
+        "description": "Returns the members of a group in the order they were added.",
+        "operationId": "list_members_api_v1_groups__group_id__members_get",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MemberRead"
+                  },
+                  "title": "Response List Members Api V1 Groups  Group Id  Members Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group_id}/members/{member_id}": {
+      "delete": {
+        "tags": [
+          "members"
+        ],
+        "summary": "Remove a member",
+        "description": "Removes a member who has no financial history. A member who has paid for or shared an expense, or taken part in a settlement, cannot be removed because doing so would change everybody else's balance.",
+        "operationId": "remove_member_api_v1_groups__group_id__members__member_id__delete",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Member Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group_id}/expenses": {
+      "post": {
+        "tags": [
+          "expenses"
+        ],
+        "summary": "Record an expense",
+        "description": "Records a shared expense. An EQUAL split divides the amount between the listed participants, giving the indivisible remainder to the lowest member ids first. An EXACT split takes the amount owed by each member and is rejected unless those amounts add up to the expense total.",
+        "operationId": "create_expense_api_v1_groups__group_id__expenses_post",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpenseCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "expenses"
+        ],
+        "summary": "List expenses",
+        "description": "Returns a page of the group's expenses, newest first.",
+        "operationId": "list_expenses_api_v1_groups__group_id__expenses_get",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Maximum number of expenses to return.",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of expenses to return."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of expenses to skip.",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of expenses to skip."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExpenseRead"
+                  },
+                  "title": "Response List Expenses Api V1 Groups  Group Id  Expenses Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/{expense_id}": {
+      "get": {
+        "tags": [
+          "expenses"
+        ],
+        "summary": "Get an expense",
+        "description": "Returns a single expense with the full breakdown of who owes what.",
+        "operationId": "get_expense_api_v1_expenses__expense_id__get",
+        "parameters": [
+          {
+            "name": "expense_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Expense Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "expenses"
+        ],
+        "summary": "Delete an expense",
+        "description": "Deletes an expense and its shares; balances change immediately.",
+        "operationId": "delete_expense_api_v1_expenses__expense_id__delete",
+        "parameters": [
+          {
+            "name": "expense_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Expense Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group_id}/balances": {
+      "get": {
+        "tags": [
+          "balances"
+        ],
+        "summary": "Get member balances",
+        "description": "Returns each member's net position: what they have paid, minus what they owe, adjusted by settlements already made. Positive means the group owes the member. The balances of a group always sum to zero.",
+        "operationId": "get_balances_api_v1_groups__group_id__balances_get",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupBalances"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group_id}/settlement-plan": {
+      "get": {
+        "tags": [
+          "balances"
+        ],
+        "summary": "Get the settlement plan",
+        "description": "Returns the payments that clear every debt in the group, matching the largest debtor with the largest creditor. A group of n members needs at most n-1 payments; a settled group returns an empty plan.",
+        "operationId": "get_settlement_plan_api_v1_groups__group_id__settlement_plan_get",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementPlan"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group_id}/summary": {
+      "get": {
+        "tags": [
+          "balances"
+        ],
+        "summary": "Get a group summary",
+        "description": "Returns totals for the group and for each member within it.",
+        "operationId": "get_summary_api_v1_groups__group_id__summary_get",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupSummary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group_id}/settlements": {
+      "post": {
+        "tags": [
+          "settlements"
+        ],
+        "summary": "Record a settlement",
+        "description": "Records money actually handed from one member to another. The payment is reflected in the group's balances straight away.",
+        "operationId": "record_settlement_api_v1_groups__group_id__settlements_post",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettlementCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "settlements"
+        ],
+        "summary": "List settlements",
+        "description": "Returns the payments recorded for the group, newest first.",
+        "operationId": "list_settlements_api_v1_groups__group_id__settlements_get",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SettlementRead"
+                  },
+                  "title": "Response List Settlements Api V1 Groups  Group Id  Settlements Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorResponse": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            ],
+            "title": "Detail",
+            "description": "Human-readable explanation, or the list of schema violations.",
+            "examples": [
+              "Group 7 does not exist"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Stable machine-readable error code.",
+            "examples": [
+              "GROUP_NOT_FOUND"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "code"
+        ],
+        "title": "ErrorResponse",
+        "description": "The single shape every failing request returns (GUIDE FR-33)."
+      },
+      "ExpenseCreate": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Description",
+            "description": "What the money was spent on.",
+            "examples": [
+              "Hotel in Pokhara"
+            ]
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,10}|(?=[\\d.]{1,13}0*$)\\d{0,10}\\.\\d{0,2}0*$)"
+              }
+            ],
+            "title": "Amount",
+            "description": "Total amount of the expense, greater than zero, at most two decimals.",
+            "examples": [
+              "1000.00"
+            ]
+          },
+          "paid_by_id": {
+            "type": "integer",
+            "title": "Paid By Id",
+            "description": "Member who actually paid the money."
+          },
+          "split_type": {
+            "$ref": "#/components/schemas/SplitType",
+            "description": "How the cost is divided."
+          },
+          "participant_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Participant Ids",
+            "description": "Members sharing the cost. Required for an EQUAL split.",
+            "examples": [
+              [
+                1,
+                2,
+                3
+              ]
+            ]
+          },
+          "shares": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ExpenseShareInput"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shares",
+            "description": "Exact amount owed per member. Required for an EXACT split."
+          }
+        },
+        "type": "object",
+        "required": [
+          "description",
+          "amount",
+          "paid_by_id",
+          "split_type"
+        ],
+        "title": "ExpenseCreate",
+        "description": "Payload for recording an expense.\n\nThe two split strategies take different inputs, and supplying both is a\ncontradiction rather than a convenience:\n\n* ``EQUAL`` expects ``participant_ids``; the API divides the amount.\n* ``EXACT`` expects ``shares``; the participants are the members listed there."
+      },
+      "ExpenseRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Unique expense identifier."
+          },
+          "group_id": {
+            "type": "integer",
+            "title": "Group Id",
+            "description": "Group the expense belongs to."
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "What the money was spent on."
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Total amount of the expense."
+          },
+          "paid_by_id": {
+            "type": "integer",
+            "title": "Paid By Id",
+            "description": "Member who paid."
+          },
+          "paid_by_name": {
+            "type": "string",
+            "title": "Paid By Name",
+            "description": "Name of the member who paid."
+          },
+          "split_type": {
+            "$ref": "#/components/schemas/SplitType",
+            "description": "How the cost was divided."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "When the expense was recorded."
+          },
+          "shares": {
+            "items": {
+              "$ref": "#/components/schemas/ExpenseShareRead"
+            },
+            "type": "array",
+            "title": "Shares",
+            "description": "Per-member breakdown of the cost."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "group_id",
+          "description",
+          "amount",
+          "paid_by_id",
+          "paid_by_name",
+          "split_type",
+          "created_at",
+          "shares"
+        ],
+        "title": "ExpenseRead",
+        "description": "An expense together with the full breakdown of who owes what."
+      },
+      "ExpenseShareInput": {
+        "properties": {
+          "member_id": {
+            "type": "integer",
+            "title": "Member Id",
+            "description": "Member who owes this portion."
+          },
+          "share_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,10}|(?=[\\d.]{1,13}0*$)\\d{0,10}\\.\\d{0,2}0*$)"
+              }
+            ],
+            "title": "Share Amount",
+            "description": "Portion of the expense owed by one member; may be zero.",
+            "examples": [
+              "333.33"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "member_id",
+          "share_amount"
+        ],
+        "title": "ExpenseShareInput",
+        "description": "One participant's exact share of an expense."
+      },
+      "ExpenseShareRead": {
+        "properties": {
+          "member_id": {
+            "type": "integer",
+            "title": "Member Id",
+            "description": "Member who owes this portion."
+          },
+          "member_name": {
+            "type": "string",
+            "title": "Member Name",
+            "description": "Name of that member."
+          },
+          "share_amount": {
+            "type": "string",
+            "title": "Share Amount",
+            "description": "Amount owed by the member."
+          }
+        },
+        "type": "object",
+        "required": [
+          "member_id",
+          "member_name",
+          "share_amount"
+        ],
+        "title": "ExpenseShareRead",
+        "description": "One participant's share as returned by the API."
+      },
+      "GroupBalances": {
+        "properties": {
+          "group_id": {
+            "type": "integer",
+            "title": "Group Id",
+            "description": "Group the balances belong to."
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency the amounts are expressed in."
+          },
+          "balances": {
+            "items": {
+              "$ref": "#/components/schemas/MemberBalance"
+            },
+            "type": "array",
+            "title": "Balances",
+            "description": "One entry per member, including zeroes."
+          }
+        },
+        "type": "object",
+        "required": [
+          "group_id",
+          "currency",
+          "balances"
+        ],
+        "title": "GroupBalances",
+        "description": "Net balances for every member of a group."
+      },
+      "GroupCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Display name of the group.",
+            "examples": [
+              "Pokhara Trip"
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional free-text note describing the group."
+          },
+          "currency": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency",
+            "description": "Three-letter uppercase currency code, recorded for display only.",
+            "default": "NPR",
+            "examples": [
+              "NPR"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "GroupCreate",
+        "description": "Payload for creating a group."
+      },
+      "GroupDetail": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Unique group identifier."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Display name of the group."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional note describing the group."
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency the group records amounts in."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "When the group was created."
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/MemberRead"
+            },
+            "type": "array",
+            "title": "Members",
+            "description": "Members currently in the group."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "currency",
+          "created_at",
+          "members"
+        ],
+        "title": "GroupDetail",
+        "description": "A group together with its members."
+      },
+      "GroupRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Unique group identifier."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Display name of the group."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional note describing the group."
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency the group records amounts in."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "When the group was created."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "currency",
+          "created_at"
+        ],
+        "title": "GroupRead",
+        "description": "A group as returned by list endpoints."
+      },
+      "GroupSummary": {
+        "properties": {
+          "group_id": {
+            "type": "integer",
+            "title": "Group Id",
+            "description": "Group being summarised."
+          },
+          "group_name": {
+            "type": "string",
+            "title": "Group Name",
+            "description": "Display name of the group."
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency the amounts are expressed in."
+          },
+          "member_count": {
+            "type": "integer",
+            "title": "Member Count",
+            "description": "Number of members in the group."
+          },
+          "expense_count": {
+            "type": "integer",
+            "title": "Expense Count",
+            "description": "Number of expenses recorded."
+          },
+          "total_spend": {
+            "type": "string",
+            "title": "Total Spend",
+            "description": "Sum of every expense in the group."
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/MemberSummary"
+            },
+            "type": "array",
+            "title": "Members",
+            "description": "Per-member totals."
+          }
+        },
+        "type": "object",
+        "required": [
+          "group_id",
+          "group_name",
+          "currency",
+          "member_count",
+          "expense_count",
+          "total_spend",
+          "members"
+        ],
+        "title": "GroupSummary",
+        "description": "Aggregate view of a group's spending."
+      },
+      "GroupUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1,
+                "description": "Display name of the group.",
+                "examples": [
+                  "Pokhara Trip"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional free-text note describing the group."
+          }
+        },
+        "type": "object",
+        "title": "GroupUpdate",
+        "description": "Partial update payload.\n\nFields left out of the request body are not modified, which is why every\nfield is optional and the router applies only those explicitly supplied."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthRead": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "description": "Always 'ok' when the service is responding."
+          },
+          "service": {
+            "type": "string",
+            "title": "Service",
+            "description": "Machine-readable service name.",
+            "examples": [
+              "fairshare-api"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "Deployed application version.",
+            "examples": [
+              "1.0.0"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "service",
+          "version"
+        ],
+        "title": "HealthRead",
+        "description": "Service liveness and identity information."
+      },
+      "MemberBalance": {
+        "properties": {
+          "member_id": {
+            "type": "integer",
+            "title": "Member Id",
+            "description": "Member the balance belongs to."
+          },
+          "member_name": {
+            "type": "string",
+            "title": "Member Name",
+            "description": "Name of the member."
+          },
+          "balance": {
+            "type": "string",
+            "title": "Balance",
+            "description": "Net amount owed to (+) or by (-) the member."
+          }
+        },
+        "type": "object",
+        "required": [
+          "member_id",
+          "member_name",
+          "balance"
+        ],
+        "title": "MemberBalance",
+        "description": "A member's net position in the group.\n\nPositive means the group owes the member; negative means the member owes the\ngroup. The balances of a group always sum to zero (GUIDE FR-23)."
+      },
+      "MemberCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name of the person, unique within the group.",
+            "examples": [
+              "Sandesh"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "MemberCreate",
+        "description": "Payload for adding a person to a group."
+      },
+      "MemberRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Unique member identifier."
+          },
+          "group_id": {
+            "type": "integer",
+            "title": "Group Id",
+            "description": "Group the member belongs to."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Name of the person."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "When the member was added."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "group_id",
+          "name",
+          "created_at"
+        ],
+        "title": "MemberRead",
+        "description": "A member as returned by the API."
+      },
+      "MemberSummary": {
+        "properties": {
+          "member_id": {
+            "type": "integer",
+            "title": "Member Id",
+            "description": "Member the totals belong to."
+          },
+          "member_name": {
+            "type": "string",
+            "title": "Member Name",
+            "description": "Name of the member."
+          },
+          "total_paid": {
+            "type": "string",
+            "title": "Total Paid",
+            "description": "Total the member has paid for the group."
+          },
+          "total_owed": {
+            "type": "string",
+            "title": "Total Owed",
+            "description": "Total share of expenses the member carries."
+          },
+          "balance": {
+            "type": "string",
+            "title": "Balance",
+            "description": "Net position after settlements."
+          }
+        },
+        "type": "object",
+        "required": [
+          "member_id",
+          "member_name",
+          "total_paid",
+          "total_owed",
+          "balance"
+        ],
+        "title": "MemberSummary",
+        "description": "Totals for one member within the group summary."
+      },
+      "SettlementCreate": {
+        "properties": {
+          "from_member_id": {
+            "type": "integer",
+            "title": "From Member Id",
+            "description": "Member who paid the money."
+          },
+          "to_member_id": {
+            "type": "integer",
+            "title": "To Member Id",
+            "description": "Member who received the money."
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,10}|(?=[\\d.]{1,13}0*$)\\d{0,10}\\.\\d{0,2}0*$)"
+              }
+            ],
+            "title": "Amount",
+            "description": "Amount actually paid from one member to another.",
+            "examples": [
+              "333.33"
+            ]
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Optional note describing how the payment was made.",
+            "examples": [
+              "Paid by eSewa"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_member_id",
+          "to_member_id",
+          "amount"
+        ],
+        "title": "SettlementCreate",
+        "description": "Payload for recording a payment between two members."
+      },
+      "SettlementPlan": {
+        "properties": {
+          "group_id": {
+            "type": "integer",
+            "title": "Group Id",
+            "description": "Group the plan was computed for."
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency the amounts are expressed in."
+          },
+          "transfers": {
+            "items": {
+              "$ref": "#/components/schemas/Transfer"
+            },
+            "type": "array",
+            "title": "Transfers",
+            "description": "Payments to make; empty when settled."
+          },
+          "transfer_count": {
+            "type": "integer",
+            "title": "Transfer Count",
+            "description": "Number of payments in the plan."
+          }
+        },
+        "type": "object",
+        "required": [
+          "group_id",
+          "currency",
+          "transfers",
+          "transfer_count"
+        ],
+        "title": "SettlementPlan",
+        "description": "The minimal set of payments that clears every debt in the group."
+      },
+      "SettlementRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Unique settlement identifier."
+          },
+          "group_id": {
+            "type": "integer",
+            "title": "Group Id",
+            "description": "Group the payment belongs to."
+          },
+          "from_member_id": {
+            "type": "integer",
+            "title": "From Member Id",
+            "description": "Member who paid."
+          },
+          "to_member_id": {
+            "type": "integer",
+            "title": "To Member Id",
+            "description": "Member who was paid."
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Amount transferred."
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Optional note describing the payment."
+          },
+          "settled_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Settled At",
+            "description": "When the payment was recorded."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "group_id",
+          "from_member_id",
+          "to_member_id",
+          "amount",
+          "note",
+          "settled_at"
+        ],
+        "title": "SettlementRead",
+        "description": "A recorded payment as returned by the API."
+      },
+      "SplitType": {
+        "type": "string",
+        "enum": [
+          "EQUAL",
+          "EXACT"
+        ],
+        "title": "SplitType",
+        "description": "How the cost of an expense is divided between its participants."
+      },
+      "Transfer": {
+        "properties": {
+          "from_member_id": {
+            "type": "integer",
+            "title": "From Member Id",
+            "description": "Member who should pay."
+          },
+          "from_member_name": {
+            "type": "string",
+            "title": "From Member Name",
+            "description": "Name of the paying member."
+          },
+          "to_member_id": {
+            "type": "integer",
+            "title": "To Member Id",
+            "description": "Member who should be paid."
+          },
+          "to_member_name": {
+            "type": "string",
+            "title": "To Member Name",
+            "description": "Name of the receiving member."
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Amount to transfer."
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_member_id",
+          "from_member_name",
+          "to_member_id",
+          "to_member_name",
+          "amount"
+        ],
+        "title": "Transfer",
+        "description": "A single payment proposed by the settlement planner."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "health",
+      "description": "Service liveness and identity."
+    },
+    {
+      "name": "groups",
+      "description": "Create and manage expense-sharing groups."
+    },
+    {
+      "name": "members",
+      "description": "Manage the people who belong to a group."
+    },
+    {
+      "name": "expenses",
+      "description": "Record shared expenses and how they are split."
+    },
+    {
+      "name": "balances",
+      "description": "Net balances, settlement plans and group summaries."
+    },
+    {
+      "name": "settlements",
+      "description": "Record payments that clear debts between members."
+    }
+  ]
+}
