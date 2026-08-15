@@ -572,7 +572,7 @@ Every error response has this shape (FR-33):
 |---|---|---|
 | 404 | Referenced resource does not exist | `GROUP_NOT_FOUND`, `MEMBER_NOT_FOUND`, `EXPENSE_NOT_FOUND` |
 | 409 | Request conflicts with current state | `DUPLICATE_MEMBER_NAME`, `MEMBER_HAS_ACTIVITY` |
-| 422 | Request is well-formed but semantically invalid | `PAYER_NOT_IN_GROUP`, `PARTICIPANT_NOT_IN_GROUP`, `DUPLICATE_PARTICIPANT`, `NO_PARTICIPANTS`, `SHARES_DO_NOT_SUM`, `SAME_MEMBER_SETTLEMENT`, `MEMBER_NOT_IN_GROUP` |
+| 422 | Request is well-formed but semantically invalid | `PAYER_NOT_IN_GROUP`, `PARTICIPANT_NOT_IN_GROUP`, `DUPLICATE_PARTICIPANT`, `NO_PARTICIPANTS`, `SHARES_DO_NOT_SUM`, `NEGATIVE_SHARE`, `SAME_MEMBER_SETTLEMENT`, `MEMBER_NOT_IN_GROUP` |
 | 422 | Schema validation failure (types, lengths, bounds) | FastAPI's standard validation body |
 | 500 | Unexpected server fault | `INTERNAL_ERROR` (no internal details leaked, NFR-12) |
 
