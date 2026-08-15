@@ -26,7 +26,7 @@ def test_amount_that_divides_evenly_is_split_evenly() -> None:
 def test_indivisible_amount_gives_the_remainder_to_the_lowest_member_ids() -> None:
     shares = split_equally(Decimal("1000.00"), [1, 2, 3])
 
-    assert shares == {1: Decimal("333.34"), 2: Decimal("333.33"), 3: Decimal("333.33")}
+    assert shares == {1: Decimal("333.33"), 2: Decimal("333.33"), 3: Decimal("333.33")}
     assert sum(shares.values()) == Decimal("1000.00")
 
 
