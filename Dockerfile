@@ -1,24 +1,33 @@
 # syntax=docker/dockerfile:1
 
+# Builder stage: compile dependencies for smaller final image
+FROM python:3.12-slim AS builder
+
+ENV PIP_NO_CACHE_DIR=1
+
+WORKDIR /build
+
+COPY requirements.txt .
+RUN python -m pip install --upgrade pip && pip install --user -r requirements.txt
+
+# Production stage
 FROM python:3.12-slim
 
 # The same Python version as local development and CI, so behaviour cannot
 # differ between the three environments (GUIDE NFR-15).
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PATH=/home/fairshare/.local/bin:$PATH
 
 WORKDIR /srv/fairshare
 
-# Dependencies are installed before the source is copied so that editing code
-# does not invalidate the cached dependency layer (GUIDE D-3).
-COPY requirements.txt ./
-RUN python -m pip install --upgrade pip && pip install -r requirements.txt
+# Copy compiled dependencies from builder (GUIDE D-3)
+COPY --from=builder --chown=1000:1000 /root/.local /home/fairshare/.local
 
-COPY app ./app
+COPY --chown=1000:1000 app ./app
 
 # The application never needs root, so it does not run as root (GUIDE D-4).
-RUN useradd --create-home --uid 1000 fairshare && chown -R fairshare:fairshare /srv/fairshare
+RUN useradd --create-home --uid 1000 fairshare
 USER fairshare
 
 EXPOSE 8000
