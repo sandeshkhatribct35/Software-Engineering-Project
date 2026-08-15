@@ -242,11 +242,14 @@ pytest --cov=app --cov-report=term-missing --cov-report=html --cov-report=xml
 
 ## 7. Docker
 
-**Image** (`Dockerfile`): `python:3.12-slim`; dependencies installed in a layer
-before the source is copied so code edits do not rebuild them; only `app/` and
-`requirements.txt` enter the image; runs as the non-root user `fairshare`;
-declares a `HEALTHCHECK` that calls the health endpoint using the standard
-library instead of installing curl.
+**Image** (`Dockerfile`): a **two-stage build** on `python:3.12-slim`. The builder
+stage installs the pinned dependencies with `pip install --user`; the runtime
+stage copies only the resulting `.local` tree, so pip's build tooling and caches
+never reach the shipped image and editing application code never rebuilds the
+dependencies. Only `app/` enters the runtime stage. The container runs as the
+non-root user `fairshare` (uid 1000) and declares a `HEALTHCHECK` that calls the
+health endpoint using the standard library instead of installing curl.
+Final image size: **294 MB**.
 
 **Stack** (`compose.yaml`): two services — `api` built locally and `db` running
 `postgres:16-alpine` with a `pg_isready` healthcheck and a named volume
@@ -389,6 +392,10 @@ In addition:
    proving the property with parametrised tests over several group sizes.
 8. **The self-review found duplication and dead code** (section 9), all fixed in
    one commit before submission.
+9. **A `docker build` failed with `TLS handshake timeout` while resolving
+   `docker/dockerfile:1`.** This was a transient Docker Hub network failure, not
+   a fault in the Dockerfile; the same build succeeded on retry. Worth knowing
+   before a live demo: build the image in advance rather than during it.
 
 ---
 

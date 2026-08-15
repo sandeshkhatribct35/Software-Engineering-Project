@@ -672,7 +672,7 @@ The full list of error codes must be documented in `docs/API.md` and reflected i
 |---|---|
 | D-1 | Base image `python:3.12-slim` (matches NFR-15). |
 | D-2 | Environment: `PYTHONDONTWRITEBYTECODE=1`, `PYTHONUNBUFFERED=1`. |
-| D-3 | Dependencies installed from `requirements.txt` in a layer **before** the source is copied, so code changes do not invalidate the dependency cache. |
+| D-3 | Dependencies are installed in a **separate builder stage** and copied into the final image, so code changes never rebuild them and build tooling never reaches the runtime image. |
 | D-4 | Application runs as a **non-root** user. |
 | D-5 | Exposes port 8000 and starts Uvicorn bound to `0.0.0.0:8000`. |
 | D-6 | A container `HEALTHCHECK` probes the health endpoint. |
