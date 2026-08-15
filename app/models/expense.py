@@ -8,17 +8,16 @@ shares of an expense are deleted with it.
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, ForeignKey, Numeric, String, UniqueConstraint
+from sqlalchemy import CheckConstraint, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.constants import EXPENSE_DESCRIPTION_MAX_LENGTH, MONEY_PRECISION
-from app.models.base import Base, CreatedAtMixin
+from app.constants import EXPENSE_DESCRIPTION_MAX_LENGTH
+from app.models.base import MONEY_TYPE, Base, CreatedAtMixin
 
 if TYPE_CHECKING:
     from app.models.group import Group
     from app.models.member import Member
 
-MONEY_TYPE = Numeric(12, MONEY_PRECISION)
 SPLIT_TYPE_MAX_LENGTH = 10
 
 
