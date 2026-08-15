@@ -8,7 +8,7 @@ schema (GUIDE C-7).
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import AfterValidator, Field, PlainSerializer
+from pydantic import AfterValidator, BaseModel, Field, PlainSerializer
 
 from app.constants import (
     CURRENCY_CODE_LENGTH,
@@ -22,6 +22,19 @@ from app.constants import (
 )
 
 MONEY_MAX_DIGITS = 12
+
+
+class ErrorResponse(BaseModel):
+    """The single shape every failing request returns (GUIDE FR-33)."""
+
+    detail: str | list[dict] = Field(
+        description="Human-readable explanation, or the list of schema violations.",
+        examples=["Group 7 does not exist"],
+    )
+    code: str = Field(
+        description="Stable machine-readable error code.",
+        examples=["GROUP_NOT_FOUND"],
+    )
 
 
 def _format_money(value: Decimal) -> str:
