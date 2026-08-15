@@ -78,6 +78,10 @@ class SharesDoNotSumError(UnprocessableError):
     code = "SHARES_DO_NOT_SUM"
 
 
+class NegativeShareError(UnprocessableError):
+    code = "NEGATIVE_SHARE"
+
+
 class SameMemberSettlementError(UnprocessableError):
     code = "SAME_MEMBER_SETTLEMENT"
 
