@@ -245,16 +245,20 @@ Each requirement is testable and is referenced by the test suite.
 | Layer | Technology | Version | Justification |
 |---|---|---|---|
 | Language | Python | 3.12 | Available locally; strong typing support; matches Docker and CI exactly. |
-| Web framework | FastAPI | 0.115.x | Generates OpenAPI documentation from the code itself, satisfying NFR-13. |
-| ASGI server | Uvicorn | 0.32.x | Standard production server for FastAPI. |
-| Validation | Pydantic | 2.9.x | Declarative request/response validation with decimal support. |
-| ORM | SQLAlchemy | 2.0.x | Mature relational mapping with explicit constraint definitions. |
-| Database driver | psycopg (v3) | 3.2.x | Current PostgreSQL adapter with native Python 3.12 wheels. |
+| Web framework | FastAPI | 0.141.1 | Generates OpenAPI documentation from the code itself, satisfying NFR-13. |
+| ASGI server | Uvicorn | 0.52.3 | Standard production server for FastAPI. |
+| Validation | Pydantic | 2.13.4 | Declarative request/response validation with decimal support. |
+| Settings | pydantic-settings | 2.15.0 | Typed configuration loaded from environment variables (NFR-9). |
+| ORM | SQLAlchemy | 2.0.52 | Mature relational mapping with explicit constraint definitions. |
+| Database driver | psycopg (v3) | 3.3.4 | Current PostgreSQL adapter with native Python 3.12 wheels. |
 | Database | PostgreSQL | 16-alpine | Real relational database with `NUMERIC` fixed-point arithmetic. |
-| Testing | pytest | 8.3.x | Fixture-based test framework. |
-| Coverage | pytest-cov | 6.0.x | Line coverage measurement and reporting. |
-| HTTP test client | httpx (via TestClient) | 0.27.x | Drives real HTTP requests against the app in integration tests. |
-| Linting & formatting | Ruff | 0.7.x | Single fast tool for lint + format; enforces §16 mechanically. |
+| Testing | pytest | 9.1.1 | Fixture-based test framework. |
+| Coverage | pytest-cov | 7.1.0 | Line coverage measurement and reporting. |
+| HTTP test client | httpx (via TestClient) | 0.28.1 | Drives real HTTP requests against the app in integration tests. |
+| Linting & formatting | Ruff | 0.16.3 | Single fast tool for lint + format; enforces §16 mechanically. |
+
+Versions above are the exact versions installed and pinned in `requirements.txt` /
+`requirements-dev.txt`, recorded after installation rather than guessed.
 | Containerisation | Docker + Compose | v2 | Application and database as reproducible containers. |
 | CI | GitHub Actions | — | Runs lint, tests, coverage gate, and image build on every push and PR. |
 | Version control | Git + GitHub | — | Branching workflow, commit history, pull request. |
@@ -849,6 +853,7 @@ fairshare-api/
 │   │
 │   ├── schemas/                   Pydantic contracts (API layer)
 │   │   ├── __init__.py
+│   │   ├── health.py
 │   │   ├── group.py
 │   │   ├── member.py
 │   │   ├── expense.py
