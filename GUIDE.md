@@ -887,16 +887,18 @@ fairshare-api/
 │
 ├── tests/
 │   ├── __init__.py
-│   ├── conftest.py                DB fixtures, TestClient, table truncation
+│   ├── conftest.py                redirects the app to the test database
 │   ├── unit/
 │   │   ├── __init__.py
 │   │   ├── test_money.py
 │   │   ├── test_splitting.py
 │   │   ├── test_balances.py
 │   │   ├── test_settlement_plan.py
-│   │   └── test_schemas.py
+│   │   ├── test_schemas.py
+│   │   └── test_error_handlers.py
 │   └── integration/
 │       ├── __init__.py
+│       ├── conftest.py            schema creation, truncation, TestClient
 │       ├── test_health_api.py
 │       ├── test_groups_api.py
 │       ├── test_members_api.py
