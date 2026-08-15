@@ -4,17 +4,15 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Numeric, String, func
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.constants import MONEY_PRECISION, SETTLEMENT_NOTE_MAX_LENGTH
-from app.models.base import Base
+from app.constants import SETTLEMENT_NOTE_MAX_LENGTH
+from app.models.base import MONEY_TYPE, Base
 
 if TYPE_CHECKING:
     from app.models.group import Group
     from app.models.member import Member
-
-MONEY_TYPE = Numeric(12, MONEY_PRECISION)
 
 
 class Settlement(Base):

@@ -24,9 +24,9 @@ API_PREFIX: Final[str] = "/api/v1"
 
 # Money. Amounts are fixed-point decimals everywhere; floats are never used.
 MONEY_PRECISION: Final[int] = 2
+MONEY_MAX_DIGITS: Final[int] = 12
 MONEY_QUANTUM: Final[Decimal] = Decimal("0.01")
 ZERO_MONEY: Final[Decimal] = Decimal("0.00")
-MIN_EXPENSE_AMOUNT: Final[Decimal] = Decimal("0.01")
 MAX_EXPENSE_AMOUNT: Final[Decimal] = Decimal("1000000.00")
 
 # Field limits, mirrored by the database schema.

@@ -17,11 +17,10 @@ from app.constants import (
     GROUP_NAME_MAX_LENGTH,
     MAX_EXPENSE_AMOUNT,
     MEMBER_NAME_MAX_LENGTH,
+    MONEY_MAX_DIGITS,
     MONEY_PRECISION,
     SETTLEMENT_NOTE_MAX_LENGTH,
 )
-
-MONEY_MAX_DIGITS = 12
 
 
 class ErrorResponse(BaseModel):

@@ -17,7 +17,7 @@ from app.errors import (
     NoParticipantsError,
     SharesDoNotSumError,
 )
-from app.services.money import from_minor_units, to_minor_units, total
+from app.services.money import from_minor_units, quantize, to_minor_units, total
 
 # A caller-supplied share: the member who owes it and how much they owe.
 ShareEntry = tuple[int, Decimal]
@@ -60,9 +60,10 @@ def validate_exact_shares(amount: Decimal, entries: Sequence[ShareEntry]) -> dic
             raise NegativeShareError(f"Share for member {member_id} is negative")
 
     shares_total = total(share for _, share in entries)
-    if shares_total != total([amount]):
+    expected_total = quantize(amount)
+    if shares_total != expected_total:
         raise SharesDoNotSumError(
-            f"Shares total {shares_total} but the expense amount is {total([amount])}"
+            f"Shares total {shares_total} but the expense amount is {expected_total}"
         )
 
     return dict(entries)

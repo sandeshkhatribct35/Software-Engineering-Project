@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.sql.base import ExecutableOption
 
 from app.constants import SplitType
 from app.errors import ExpenseNotFoundError
@@ -77,7 +78,7 @@ def delete(db: Session, expense: Expense) -> None:
     db.commit()
 
 
-def _eager_loads() -> tuple[object, ...]:
+def _eager_loads() -> tuple[ExecutableOption, ...]:
     """Load payer and share owners up front so listings issue no N+1 queries."""
     return (
         selectinload(Expense.paid_by),
