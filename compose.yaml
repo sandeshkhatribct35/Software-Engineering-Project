@@ -1,0 +1,37 @@
+name: fairshare
+
+services:
+  api:
+    build: .
+    container_name: fairshare-api
+    ports:
+      - "8000:8000"
+    environment:
+      # Supplied by the environment, never hard-coded in Python (GUIDE D-11).
+      DATABASE_URL: postgresql+psycopg://fairshare:fairshare@db:5432/fairshare
+      LOG_LEVEL: INFO
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    container_name: fairshare-db
+    environment:
+      POSTGRES_USER: fairshare
+      POSTGRES_PASSWORD: fairshare
+      POSTGRES_DB: fairshare
+    ports:
+      # Published so the local test suite can use the same server.
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fairshare -d fairshare"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
