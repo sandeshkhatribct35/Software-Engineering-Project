@@ -312,7 +312,7 @@ A **layered (n-tier) monolith** with a strict, one-directional dependency rule:
 
 ## 10.2 The dependency rule
 
-- `routers` may import `schemas`, `services`, `repositories`, `errors`.
+- `routers` may import `schemas`, `services`, `repositories`, `errors`, and `models` (for type annotations and for reading loaded attributes when building responses).
 - `repositories` may import `models`, `errors`.
 - **`services` may import nothing from the project except `errors` and constants.** It must never import FastAPI, SQLAlchemy, or any model.
 - `models` and `schemas` import nothing from other layers.
@@ -853,6 +853,7 @@ fairshare-api/
 │   │
 │   ├── schemas/                   Pydantic contracts (API layer)
 │   │   ├── __init__.py
+│   │   ├── common.py              shared field types (money, non-blank names)
 │   │   ├── health.py
 │   │   ├── group.py
 │   │   ├── member.py
