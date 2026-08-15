@@ -6,7 +6,16 @@ The length limits mirror the column definitions in ``app.models``.
 """
 
 from decimal import Decimal
+from enum import StrEnum
 from typing import Final
+
+
+class SplitType(StrEnum):
+    """How the cost of an expense is divided between its participants."""
+
+    EQUAL = "EQUAL"
+    EXACT = "EXACT"
+
 
 # Service identity, surfaced by the health endpoint and the OpenAPI document.
 SERVICE_NAME: Final[str] = "fairshare-api"
