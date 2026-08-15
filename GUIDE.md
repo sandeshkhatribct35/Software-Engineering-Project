@@ -807,8 +807,13 @@ main                     always working; every merge is a completed stage
  ├── feature/testing      unit + integration suites, coverage configuration
  ├── feature/docker       Dockerfile, compose stack, .dockerignore
  ├── feature/ci           GitHub Actions workflow
+ ├── refactor/clean-code-review   fixes raised by the self-review (§16, C-13)
  └── feature/docs         README, API reference, project notes
 ```
+
+One additional branch exists but is **never merged**: `feature/ci-failure-demo`
+deliberately breaks a test to prove the pipeline blocks broken code, then
+restores it. It is kept so the red run stays visible in the Actions history.
 
 Each branch is created from an up-to-date `main`, developed with several commits, then merged back with `git merge --no-ff` so the merge point is visible in the history graph. Branches are **not deleted**, so the graph remains legible at assessment time.
 
