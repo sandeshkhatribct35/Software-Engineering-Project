@@ -20,7 +20,7 @@ from app.config import get_settings
 from app.constants import SERVICE_NAME, SERVICE_VERSION
 from app.database import init_db
 from app.errors import FairShareError
-from app.routers import health
+from app.routers import balances, expenses, groups, health, members, settlements
 
 logger = logging.getLogger(SERVICE_NAME)
 
@@ -104,3 +104,8 @@ async def handle_unexpected_error(_: Request, exc: Exception) -> JSONResponse:
 
 
 app.include_router(health.router)
+app.include_router(groups.router)
+app.include_router(members.router)
+app.include_router(expenses.router)
+app.include_router(balances.router)
+app.include_router(settlements.router)

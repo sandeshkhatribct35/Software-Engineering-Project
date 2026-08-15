@@ -313,7 +313,7 @@ A **layered (n-tier) monolith** with a strict, one-directional dependency rule:
 ## 10.2 The dependency rule
 
 - `routers` may import `schemas`, `services`, `repositories`, `errors`, and `models` (for type annotations and for reading loaded attributes when building responses).
-- `repositories` may import `models`, `errors`.
+- `repositories` may import `models`, `errors`, and the pure data structures declared in `services` (such as `MemberTotals`), so that aggregate queries can be handed straight to the calculation layer.
 - **`services` may import nothing from the project except `errors` and constants.** It must never import FastAPI, SQLAlchemy, or any model.
 - `models` and `schemas` import nothing from other layers.
 
@@ -870,6 +870,7 @@ fairshare-api/
 │   │
 │   ├── repositories/              all database access
 │   │   ├── __init__.py
+│   │   ├── balances.py            aggregate SUM queries behind balances
 │   │   ├── groups.py
 │   │   ├── members.py
 │   │   ├── expenses.py
